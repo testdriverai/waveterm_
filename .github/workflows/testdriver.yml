@@ -68,7 +68,7 @@ jobs:
               env:
                   FORCE_COLOR: "3"
               with:
-                  key: ${{ secrets.DASHCAM_API }}
+                  key: ${{ secrets.DASHCAM_WORKSPACE_API }}
                   prerun: |
                       $headers = @{
                           Authorization = "token ${{ secrets.GITHUB_TOKEN }}"

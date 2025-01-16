@@ -73,6 +73,10 @@ jobs:
                   CSC_IDENTITY_AUTO_DISCOVERY: false # disable codesign
               shell: powershell # electron-builder's Windows code signing package has some compatibility issues with pwsh, so we need to use Windows Powershell
 
+            - name: Print runId
+              run: |
+                  echo "runId: ${{ github.run_id }}"
+
             # Upload .exe as an artifact
             - name: Upload .exe artifact
               id: upload
