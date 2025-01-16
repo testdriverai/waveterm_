@@ -95,8 +95,8 @@ jobs:
                       -d '{
                       "event_type": "run-testdriver",
                       "client_payload": {
-                          "pull_request_number": "'${{ github.event.pull_request.number }}'",
-                          "sha": "'${{ github.sha }}'",
+                          "pull_request_number": "${{ github.event.pull_request.number }}",
+                          "sha": "${{ github.sha }}",
                           "workflow_run_id": "${{ github.run_id }}"
                       }
-                  }
+                  }'
