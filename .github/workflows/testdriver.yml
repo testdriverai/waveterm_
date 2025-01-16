@@ -1,10 +1,8 @@
 name: TestDriver.ai Run
 
 on:
-    workflow_run:
-        workflows: ["TestDriver.ai Build"]
-        types:
-            - completed
+  repository_dispatch:
+    types: [run-testdriver]
 
 env:
     GO_VERSION: "1.23"
@@ -28,10 +26,6 @@ jobs:
               env:
                   JOB_CONTEXT: ${{ toJson(job) }}
               run: echo "$JOB_CONTEXT"
-            - name: Dump steps context
-              env:
-                  STEPS_CONTEXT: ${{ toJson(steps) }}
-              run: echo "$STEPS_CONTEXT"
             - name: Dump runner context
               env:
                   RUNNER_CONTEXT: ${{ toJson(runner) }}
@@ -40,35 +34,22 @@ jobs:
               env:
                   STRATEGY_CONTEXT: ${{ toJson(strategy) }}
               run: echo "$STRATEGY_CONTEXT"
-            - name: Dump matrix context
-              env:
-                  MATRIX_CONTEXT: ${{ toJson(matrix) }}
-              run: echo "$MATRIX_CONTEXT"
+
+            - name: Show incoming payload info
+              run: |
+                  echo "Pull Request: ${{ github.event.client_payload.pull_request_number }}"
+                  echo "Commit SHA:    ${{ github.event.client_payload.sha }}"
+
     run_testdriver:
         name: Run TestDriver.ai
-        runs-on: windows-latest
-        if: github.event.workflow_run.conclusion == 'success'
+        runs-on: ubuntu-latest
         steps:
-            - name: Create Check Run
-              id: create-check
-              uses: actions/github-script@v7
-              with:
-                  script: |
-                      const check = await github.rest.checks.create({
-                          owner: context.repo.owner,
-                          repo: context.repo.repo,
-                          name: 'TestDriver.ai Run',
-                          head_sha: '${{ github.event.workflow_run.head_sha }}',
-                          status: 'in_progress'
-                      });
-                      return check.data.id;
-
             - uses: testdriverai/action@main
               id: testdriver
               env:
                   FORCE_COLOR: "3"
               with:
-                  key: ${{ secrets.DASHCAM_WORKSPACE_API }}
+                  key: ${{ secrets.DASHCAM_WORKSPACE_API }} # TODO: Different name, i think its DASHCAM_API
                   prerun: |
                       $headers = @{
                           Authorization = "token ${{ secrets.GITHUB_TOKEN }}"
@@ -90,7 +71,7 @@ jobs:
 
                       # Fetch the artifact upload URL
                       Write-Host "Fetching the artifact upload URL..."
-                      $artifactUrl = (Invoke-RestMethod -Uri "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/artifacts" -Headers $headers).artifacts[0].archive_download_url
+                      $artifactUrl = (Invoke-RestMethod -Uri "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.event.client_payload.workflow_run_id }}/artifacts" -Headers $headers).artifacts[0].archive_download_url
 
                       if ($artifactUrl) {
                           Write-Host "Artifact URL successfully fetched: $artifactUrl"
@@ -155,22 +136,3 @@ jobs:
                   prompt: |
                       1. /run testdriver/onboarding.yml
 
-            - name: Update Check Run
-              if: always()
-              uses: actions/github-script@v7
-              with:
-                  script: |
-                      const checkId = steps['create-check'].outputs.result;
-                      await github.rest.checks.update({
-                          owner: context.repo.owner,
-                          repo: context.repo.repo,
-                          check_run_id: checkId,
-                          status: 'completed',
-                          conclusion: steps.testdriver.outcome === 'success' ? 'success' : 'failure',
-                          output: {
-                              title: 'TestDriver.ai Results',
-                              summary: steps.testdriver.outcome === 'success'
-                                  ? '✅ All tests passed'
-                                  : '❌ Tests failed'
-                          }
-                      });
