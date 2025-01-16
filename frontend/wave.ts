@@ -86,7 +86,7 @@ async function initWaveWrap(initOpts: WaveInitOpts) {
 }
 
 async function reinitWave() {
-    console.log("Reinit Wave");
+    console.log("Reinit Wave Testing");
     getApi().sendLog("Reinit Wave");
 
     // We use this hack to prevent a flicker of the previously-hovered tab when this view was last active.
