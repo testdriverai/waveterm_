@@ -91,7 +91,7 @@ jobs:
               run: |
                   $headers = @{
                       Accept = "application/vnd.github.v3+json"
-                      Authorization = "token ${{ secrets.GITHUB_TOKEN }}"
+                      Authorization = "Bearer ${{ secrets.GITHUB_TOKEN }}"
                   }
                   $body = @{
                       event_type = "run-testdriver"
@@ -100,5 +100,11 @@ jobs:
                           sha = "${{ github.sha }}"
                           workflow_run_id = "${{ github.run_id }}"
                       }
-                  }
-                  Invoke-RestMethod -Uri "https://api.github.com/repos/${{ github.repository }}/dispatches" -Method POST -Headers $headers -Body ($body | ConvertTo-Json)
+                  } | ConvertTo-Json
+                  
+                  Invoke-RestMethod `
+                      -Uri "https://api.github.com/repos/${{ github.repository }}/dispatches" `
+                      -Method POST `
+                      -Headers $headers `
+                      -Body $body `
+                      -ContentType "application/json"
