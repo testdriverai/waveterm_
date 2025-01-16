@@ -2,15 +2,7 @@
 name: Merge Gatekeeper
 
 on:
-    pull_request:
-        branches:
-            - main
-            - master
-        types:
-            - opened
-            - synchronize
-            - reopened
-            - ready_for_review
+    workflow_dispatch: # Only manual triggers
 
 jobs:
     merge-gatekeeper:
