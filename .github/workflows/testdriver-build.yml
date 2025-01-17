@@ -34,6 +34,7 @@ env:
 permissions:
     contents: read # To allow the action to read repository contents
     pull-requests: write # To allow the action to create/update pull request comments
+    actions: write # To allow the action to read actions
 
 jobs:
     build_and_upload:
